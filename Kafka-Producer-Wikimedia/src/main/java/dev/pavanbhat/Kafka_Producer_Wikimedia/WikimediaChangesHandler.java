@@ -1,12 +1,13 @@
 package dev.pavanbhat.Kafka_Producer_Wikimedia;
 
+import com.launchdarkly.eventsource.EventHandler;
 import com.launchdarkly.eventsource.MessageEvent;
-import com.launchdarkly.eventsource.background.BackgroundEventHandler;
+//import com.launchdarkly.eventsource.background.BackgroundEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
-public class WikimediaChangesHandler implements BackgroundEventHandler {
+public class WikimediaChangesHandler implements EventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WikimediaChangesHandler.class);
 
@@ -42,6 +43,6 @@ public class WikimediaChangesHandler implements BackgroundEventHandler {
 
     @Override
     public void onError(Throwable throwable) {
-
+        LOGGER.error("BackgroundEventSource error:", throwable);
     }
 }
