@@ -1,8 +1,11 @@
 package dev.pavanbhat.Kafka_Producer_Wikimedia;
 
+import com.launchdarkly.eventsource.EventHandler;
 import com.launchdarkly.eventsource.EventSource;
-import com.launchdarkly.eventsource.background.BackgroundEventHandler;
-import com.launchdarkly.eventsource.background.BackgroundEventSource;
+//import com.launchdarkly.eventsource.background.BackgroundEventHandler;
+//import com.launchdarkly.eventsource.background.BackgroundEventSource;
+import okhttp3.Headers;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,18 +32,26 @@ public class WikimediaChangesProducer {
     }
 
     public void sendMessage() throws InterruptedException {
-
         String topic = "wikimedia_recentchange";
 
-        //read real time stream data from wikimedia, we use event source
-        BackgroundEventHandler eventHandler =  new WikimediaChangesHandler(kafkaTemplate, topic);
-        URI uriUrl = URI.create(wikimediaApiUrl);
-        EventSource.Builder esBuilder = new EventSource.Builder(uriUrl);
-        BackgroundEventSource.Builder eventSource = new BackgroundEventSource.Builder(eventHandler,esBuilder);
-        BackgroundEventSource source = eventSource.build();
-        source.start();
+        EventHandler eventHandler = new WikimediaChangesHandler(kafkaTemplate, topic);
 
+        //Add headers
+        Headers headers = new Headers.Builder()
+                .add("User-Agent", "MyKafkaProducer/1.0 (yourname@example.com)") // Required
+                .build();
 
+        OkHttpClient client = new OkHttpClient();
+
+        EventSource eventSource = new EventSource.Builder(eventHandler, URI.create(wikimediaApiUrl))
+                .client(client)
+                .headers(headers)
+                .build();
+
+        eventSource.start();
+
+        LOGGER.info("Connected to Wikimedia stream with headers...");
         TimeUnit.MINUTES.sleep(10);
     }
+
 }
